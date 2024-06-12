@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Registration failed:", error.message);
                 alert("Registration failed: " + error.message);
             } else {
-                console.log('Registration successful:', data);
                 alert("Registration successful! Please log in.");
                 window.location.href = 'login.html'; // Redirect to login page upon successful registration
             }

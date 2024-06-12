@@ -17,14 +17,17 @@
         <link rel="stylesheet" href="assets/css/font-awesome.min.css">
 		
 		<!-- Lineawesome CSS -->
-        <link rel="stylesheet" href="assets/css/line-awesome.min.css">
+		<link rel="stylesheet" href="assets/css/line-awesome.min.css">
 		
-		<!-- Chart CSS -->
-		<link rel="stylesheet" href="assets/plugins/morris/morris.css">
+		<!-- Select2 CSS -->
+		<link rel="stylesheet" href="assets/css/select2.min.css">
 		
-		<!-- Main CSS -->
-        <link rel="stylesheet" href="assets/css/style.css">		
-<!-- 
+		<!-- Datetimepicker CSS -->
+		<link rel="stylesheet" href="assets/css/bootstrap-datetimepicker.min.css">
+		
+		<!-- Main Stylesheet -->
+        <link rel="stylesheet" href="assets/css/style.css">
+
 		<style>
 			.submenu ul {
 				display: none;
@@ -32,7 +35,13 @@
 			.submenu.open ul {
 				display: block;
 			}
-		</style> -->
+
+			.punch-btn-section {
+				display: flex;
+				justify-content: center; /* Center horizontally */
+				align-items: center;
+			}
+		</style>
 	
     <body>
 		<!-- Main Wrapper -->
@@ -53,7 +62,7 @@
 							<li class="menu-title"> 
 								<span>Main</span>
 							</li>
-							<li class="active"> 
+							<li> 
 								<a href="dashboard.html"><i class="la la-dashboard"></i><span>Dashboard</span></a>
 							</li>
 							<li class="menu-title"> 
@@ -63,28 +72,23 @@
 								<a class="noti-dot"><i class="la la-user"></i> <span> Employees</span> <span class="menu-arrow"></span></a>
 								<ul style="display: none;">
 									<li><a href="employees.html">All Employees</a></li>
-									<li><a href="holidays.html">Holidays</a></li>
 									<li><a href="timeoff.html">Time off</a></li>
-									<li><a href="leave-settings.html">Leave Settings</a></li>
-									<li><a href="attendance.html">Attendance</a></li>
-									<li><a href="#">Attendance (Employee)</a></li>
-									<!-- <li><a href="#">Departments</a></li> -->
-									<!-- <li><a href="#">Timesheet</a></li> -->
-									<!-- <li><a href="shift-scheduling.html">Shift & Schedule</a></li> -->
+									<li><a class="active" href="attendance.html">Attendance</a></li>
 									<li><a href="overtime.html">Overtime</a></li>
+									<li><a href="departments.html">Departments</a></li>
 								</ul>
 							</li>
-							<li class="submenu">
+							<!-- <li class="submenu">
 								<a href="#"><i class="la la-rocket"></i> <span> Projects</span> <span class="menu-arrow"></span></a>
 								<ul style="display: none;">
 									<li><a href="projects.html">Projects</a></li>
 									<li><a href="tasks.html">Tasks</a></li>
 									<li><a href="task-board.html">Task Board</a></li>
 								</ul>
-							</li>
-							<li> 
+							</li> -->
+							<!-- <li> 
 								<a href="tickets.html"><i class="la la-ticket"></i> <span>Tickets</span></a>
-							</li>
+							</li> -->
 							<li class="menu-title"> 
 								<span>HR</span>
 							</li>
@@ -165,70 +169,169 @@
 			
 			<!-- Page Wrapper -->
             <div class="page-wrapper">
-			
-				<!-- Page Content -->
                 <div class="content container-fluid">
-				
 					<!-- Page Header -->
 					<div class="page-header">
 						<div class="row">
 							<div class="col-sm-12">
-								<h3 class="page-title" id="username-placeholder">Welcome <span id="name"></span></h3>
+								<h3 class="page-title">Attendance</h3>
 								<ul class="breadcrumb">
-									<li class="breadcrumb-item active">Dashboard</li>
+									<li class="breadcrumb-item"><a href="dashboard.html">Dashboard</a></li>
+									<li class="breadcrumb-item active">Attendance</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 					<!-- /Page Header -->
-				
+					
 					<div class="row">
-						<div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-							<div class="card dash-widget">
+						<div class="col-md-8">
+							<div class="card punch-status">
 								<div class="card-body">
-									<span class="dash-widget-icon"><i class="fa fa-cubes"></i></span>
-									<div class="dash-widget-info">
-										<h3>112</h3>
-										<span>Projects</span>
+									<h5 class="card-title"><small class="text-muted"><span id="date-now"></span></small></h5>
+									<div class="punch-det">
+										<h6>Last Punch In at</h6>
+										<p>Wed, 11th Mar 2019 10.00 AM</p>
 									</div>
+									<div class="punch-info">
+										<div class="punch-hours">
+											<span>0 hrs</span>
+										</div>
+									</div>
+									<div class="punch-btn-section">
+										<div class="punch-btn-section">
+											<button type="button" class="btn btn-primary punch-btn" id="punch-in-btn" style="display: none;">Punch In</button> <!-- Button 1 -->
+											<button type="button" class="btn btn-primary punch-btn" id="punch-out-btn" style="display: none;">Punch Out</button> <!-- Button 2 -->
+											<button type="button" class="btn btn-success punch-btn" id="status-btn" style="display: none;" disabled></button> <!-- Button 3 -->
+										</div>										
+									</div>									
 								</div>
+								<br>
 							</div>
 						</div>
-						<div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-							<div class="card dash-widget">
+						<div class="col-md-4">
+							<div class="card recent-activity">
 								<div class="card-body">
-									<span class="dash-widget-icon"><i class="fa fa-usd"></i></span>
-									<div class="dash-widget-info">
-										<h3>44</h3>
-										<span>Clients</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-							<div class="card dash-widget">
-								<div class="card-body">
-									<span class="dash-widget-icon"><i class="fa fa-diamond"></i></span>
-									<div class="dash-widget-info">
-										<h3>37</h3>
-										<span>Tasks</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-							<div class="card dash-widget">
-								<div class="card-body">
-									<span class="dash-widget-icon"><i class="fa fa-user"></i></span>
-									<div class="dash-widget-info">
-										<h3>218</h3>
-										<span>Employees</span>
-									</div>
+									<h5 class="card-title">Activity</h5>
+									<ul class="res-activity-list">
+										<li>
+											<p class="mb-0">Punch In at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												10.00 AM.
+											</p>
+										</li>
+										<li>
+											<p class="mb-0">Punch Out at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												11.00 AM.
+											</p>
+										</li>
+										<li>
+											<p class="mb-0">Punch In at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												11.15 AM.
+											</p>
+										</li>
+										<li>
+											<p class="mb-0">Punch Out at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												1.30 PM.
+											</p>
+										</li>
+										<li>
+											<p class="mb-0">Punch In at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												2.00 PM.
+											</p>
+										</li>
+										<li>
+											<p class="mb-0">Punch Out at</p>
+											<p class="res-activity-time">
+												<i class="fa fa-clock-o"></i>
+												7.30 PM.
+											</p>
+										</li>
+									</ul>
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
+
+					<!-- Search Filter -->
+					<div class="row filter-row">
+						<div class="col-sm-3">  
+							<div class="form-group form-focus">
+								<div class="cal-icon">
+									<input type="text" class="form-control floating datetimepicker">
+								</div>
+								<label class="focus-label">Date</label>
+							</div>
+						</div>
+						<div class="col-sm-3"> 
+							<div class="form-group form-focus select-focus">
+								<select class="select floating"> 
+									<option>-</option>
+									<option>Jan</option>
+									<option>Feb</option>
+									<option>Mar</option>
+									<option>Apr</option>
+									<option>May</option>
+									<option>Jun</option>
+									<option>Jul</option>
+									<option>Aug</option>
+									<option>Sep</option>
+									<option>Oct</option>
+									<option>Nov</option>
+									<option>Dec</option>
+								</select>
+								<label class="focus-label">Select Month</label>
+							</div>
+						</div>
+						<div class="col-sm-3"> 
+							<div class="form-group form-focus select-focus">
+								<select class="select floating"> 
+									<option>-</option>
+									<option>2019</option>
+									<option>2018</option>
+									<option>2017</option>
+									<option>2016</option>
+									<option>2015</option>
+								</select>
+								<label class="focus-label">Select Year</label>
+							</div>
+						</div>
+						<div class="col-sm-3">  
+							<a href="#" class="btn btn-success btn-block"> Search </a>  
+						</div>     
+                    </div>
+					<!-- /Search Filter -->
+					
+                    <div class="row">
+                        <div class="col-lg-12">
+							<div class="table-responsive">
+								<table class="table table-striped custom-table mb-0">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Date </th>
+											<th>Punch In</th>
+											<th>Punch Out</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody id="attendance-table-body">
+										<!-- Data attendance akan ditampilkan di sini -->
+									</tbody>
+								</table>
+							</div>
+                        </div>
+                    </div>
+                </div>
 				<!-- /Page Content -->
             </div>
 			<!-- /Page Wrapper -->
@@ -264,8 +367,16 @@
 		<!-- Custom JS -->
 		<script src="assets/js/app.js"></script>
 
+		<!-- Select2 JS -->
+		<script src="assets/js/select2.min.js"></script>
+		
+		<!-- Datetimepicker JS -->
+		<script src="assets/js/moment.min.js"></script>
+		<script src="assets/js/bootstrap-datetimepicker.min.js"></script>
+
 		<!-- Backend -->
 		<script type="module" src="../config/supabaseClient.js"></script>
 		<script type="module" src="../controller/userInf.js"></script>
+		<script type="module" src="../controller/attendance.js"></script>
     </body>
 </html>
