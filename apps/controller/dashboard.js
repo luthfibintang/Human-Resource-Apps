@@ -1,32 +1,39 @@
-import { supabase } from '../config/supabaseClient.js'; // Import Supabase client
-
+import { supabase } from '../config/supabaseClient.js';
+import { getCurrentUser } from '../controller/userInf.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const loggedIn = window.localStorage.getItem('loggedIn');
-    const id = window.localStorage.getItem('id');
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        alert('User not logged in');
+        return;
+    }
 
-    if (loggedIn !== 'true') {
-        window.location.href = 'login.html';
+    const { data: user, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id_user', currentUser.id_user)
+        .single();
+
+    if (error) {
+        console.error('Error fetching user data:', error);
+        alert(`Error fetching user data: ${error.message}`);
+        return;
+    }
+
+    if (user) {
+        document.getElementById('user_name').textContent = user.name;
+
+        const dateNowElement = document.getElementById('date-now');
+        const now = new Date();
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        let formattedDate = now.toLocaleDateString('en-US', options);
+        
+        // Remove the comma before the year
+        formattedDate = formattedDate.replace(/, (\d{4})/, ' $1');
+
+        dateNowElement.textContent = formattedDate;
     } else {
-        // Fetch username based on id
-        const { data: userData, error } = await supabase
-            .from('users')
-            .select('name')
-            .eq('id', id)
-            .single();
-
-        if (error || !userData) {
-            console.error('Failed to fetch user data:', error);
-        } else {
-            document.getElementById('name').textContent = userData.name
-            document.getElementById('name-profile').textContent = userData.name
-        }
+        console.error('User not found');
+        alert('User not found');
     }
 });
-
-window.logout = function() {
-    // Hapus semua data localStorage
-    window.localStorage.clear();
-    // Redirect ke halaman login
-    window.location.href = 'login.html';
-}

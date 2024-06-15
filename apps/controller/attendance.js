@@ -21,7 +21,7 @@ async function checkAttendanceState(user) {
     const { date } = getLocalTime();
     const { data, error } = await supabase
         .from('attendance')
-        .select('check_in_time, check_out_time, status')
+        .select('*')
         .eq('id_user', user.id_user)
         .eq('date', date);
 
@@ -33,6 +33,7 @@ async function checkAttendanceState(user) {
     return data.length > 0 ? data[0] : null;
 }
 
+
 document.addEventListener("DOMContentLoaded", async function() {
     const user = await getCurrentUser();
     const punchInButton = document.getElementById('punch-in-btn');
@@ -40,6 +41,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     const statusButton = document.getElementById('status-btn');
     const punchDetElement = document.querySelector('.punch-det');
     const punchHoursElement = document.querySelector('.punch-hours span');
+    const todayPunchInElement = document.getElementById('today-punch-in');
     const now = new Date();
     const Allmonth = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const month = Allmonth[now.getMonth()]
@@ -64,11 +66,47 @@ document.addEventListener("DOMContentLoaded", async function() {
             statusButton.textContent = `You are ${attendanceState.status} today`;
         } else {
             punchOutButton.style.display = 'block';
-            punchDetElement.innerHTML = `<h6>Last Punch In at</h6><p>${new Date(attendanceState.check_in_time).toLocaleString()}</p>`;
+            var date = new Date(attendanceState.date)
+            punchDetElement.innerHTML = `<h6>Last Punch In at</h6><p>${date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })} - ${formatTime(attendanceState.check_in_time)}</p>`;
         }
     } else {
         punchInButton.style.display = 'block';
     }
+
+    function formatTime(timeString) {
+        const time = new Date(`1970-01-01T${timeString}Z`);
+        const hours = time.getUTCHours().toString().padStart(2, '0');
+        const minutes = time.getUTCMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+    
+
+    async function updateTodayPunchIn() {
+        const user = await getCurrentUser();
+        if (!user) {
+            todayPunchInElement.textContent = "User not logged in";
+            return;
+        }
+
+        const { date } = getLocalTime();
+        
+        const { data, error } = await supabase
+            .from('attendance')
+            .select('check_in_time')
+            .eq('id_user', user.id_user)
+            .eq('date', date)
+            .single();
+
+        console.log(data)
+
+        if (error || !data) {
+            todayPunchInElement.textContent = "Not punch in yet today";
+        } else {
+            todayPunchInElement.textContent = `Today Punched In at ${data.check_in_time}`;
+        }
+    }
+
+    updateTodayPunchIn();
 
     punchInButton.addEventListener('click', async () => {
         const { date, time } = getLocalTime();
@@ -80,6 +118,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     id_user: user.id_user,
                     date: date,
                     check_in_time: time,
+                    attendance_type: "Live",
                     status: 'Present' // You can adjust this based on logic for status
                 }
             ]);
@@ -93,6 +132,8 @@ document.addEventListener("DOMContentLoaded", async function() {
             punchDetElement.innerHTML = `<h6>Last Punch In at</h6><p>${new Date().toLocaleString()}</p>`;
             punchHoursElement.textContent = '0 hrs';
             alert('Punched in successfully');
+            $('#attendance-table').DataTable().destroy();
+            displayAttendanceData();
         }
     });
 
@@ -116,7 +157,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 throw new Error('No attendance data found');
             }
     
-            const attendanceRecord = data[0]; // Ambil data pertama dari hasil query
+            // const attendanceRecord = data[0]; // Ambil data pertama dari hasil 
+            const attendanceState = await checkAttendanceState(user);
     
             // Lakukan punch-out setelah data berhasil diambil
             const { time } = getLocalTime();
@@ -134,7 +176,10 @@ document.addEventListener("DOMContentLoaded", async function() {
             // Jika berhasil, perbarui tampilan tombol dan status
             punchOutButton.style.display = 'none';
             statusButton.style.display = 'block';
+            statusButton.textContent = `You are ${attendanceState.status} today`;
             alert('Punched out successfully');
+            $('#attendance-table').DataTable().destroy();
+            displayAttendanceData();
         } catch (error) {
             console.error('Error punching out:', error);
             alert('Failed to punch out');
@@ -166,26 +211,111 @@ async function displayAttendanceData() {
         tbody.innerHTML = ''; // Bersihkan isi tbody sebelum menambahkan baris baru
 
         data.forEach((attendance, index) => {
+            const punchOut = attendance.check_out_time ? convertTime(attendance.check_out_time) : 'Not Punch Out yet';
             const row = `
                 <tr>
                     <td>${index + 1}</td>
                     <td>${formatDate(attendance.date)}</td>
-                    <td>${attendance.check_in_time}</td>
-                    <td>${attendance.check_out_time}</td>
+                    <td>${convertTime(attendance.check_in_time)}</td>
+                    <td>${punchOut}</td>
+                    <td>${attendance.attendance_type}</td>
                     <td>${attendance.status}</td>
                 </tr>
             `;
             tbody.innerHTML += row;
         });
+
+        if ($.fn.DataTable.isDataTable('#attendance-table')) {
+            $('#attendance-table').DataTable().destroy();
+        }
+
+        // Initialize DataTables
+        $('#attendance-table').DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            autoWidth: true,
+            responsive: true,
+            lengthChange: true,
+            pageLength: 10,
+            language: {
+                emptyTable: "No data available in table",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)",
+                lengthMenu: "Show _MENU_ entries",
+                loadingRecords: "Loading...",
+                processing: "Processing...",
+                search: "Search:",
+                zeroRecords: "No matching records found",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
+
     } catch (error) {
         console.error('Error displaying attendance data:', error.message);
     }
+}
+
+function convertTime(time) {
+    const parts = time.split(':'); // Pisahkan waktu menjadi jam, menit, dan detik
+    const hours = parts[0]; // Ambil bagian jam
+    const minutes = parts[1]; // Ambil bagian menit
+    return `${hours}:${minutes}`; // Gabungkan jam dan menit
 }
 
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+
+// Reqeust Attendance
+document.getElementById('attendance-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+        alert('User not logged in');
+        return;
+    }
+
+    const date = document.getElementById('add-date').value;
+    const checkIn = document.getElementById('add-checkintime').value;
+    const checkOut = document.getElementById('add-checkouttime').value;
+    const description = document.getElementById('add-description').value;
+    const attDate = date.split('/').reverse().join('-');
+
+    const { data, error } = await supabase
+        .from('attendance')
+        .insert([
+            { 
+                id_user: currentUser.id_user, 
+                date: attDate, 
+                check_in_time: checkIn, 
+                check_out_time: checkOut, 
+                description: description, 
+                status: 'Pending',
+                attendance_type: "Request" 
+            }
+        ]);
+
+    if (error) {
+        console.error('Error inserting attendance data:', error);
+        alert(`Error inserting attendance data: ${error.message}`);
+        return;
+    }
+
+    alert('Attendance request submitted successfully');
+    document.getElementById('attendance-form').reset();
+    $('#request_attendance').modal('hide');
+    $('#attendance-table').DataTable().destroy();
+    displayAttendanceData();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     displayAttendanceData();

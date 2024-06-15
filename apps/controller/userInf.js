@@ -4,9 +4,12 @@ import { supabase } from '../config/supabaseClient.js'; // Import Supabase clien
 document.addEventListener('DOMContentLoaded', async () => {
     const loggedIn = window.localStorage.getItem('loggedIn');
     const id = window.localStorage.getItem('id');
+    const role = window.localStorage.getItem('role')
+
+    console.log(role);
 
     if (loggedIn !== 'true') {
-        window.location.href = 'login.html';
+        window.location.href = '../login.html';
     } else {
         // Fetch username based on id
         const { data: userData, error } = await supabase
@@ -26,7 +29,7 @@ window.logout = function() {
     // Hapus semua data localStorage
     window.localStorage.clear();
     // Redirect ke halaman login
-    window.location.href = 'login.html';
+    window.location.href = '../login.html';
 }
 
 export async function getCurrentUser() {

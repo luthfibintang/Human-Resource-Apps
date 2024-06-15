@@ -4,13 +4,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     const loggedIn = window.localStorage.getItem('loggedIn');
+    const role = window.localStorage.getItem('role');
 
-    // cek user sudah login atau belum
-    if (loggedIn === 'true') {
-        window.location.href = 'dashboard.html';
+    // Jika pengguna sudah login, arahkan mereka ke halaman yang sesuai
+    if (loggedIn && role) {
+        if (loggedIn === 'true' || role === 'admin') {
+            window.location.href = 'admin/dashboard-admin.html';
+        } else if (loggedIn == 'true' || role === 'employee') {
+            window.location.href = 'employee/dashboard.html';
+        }
     }
 
-    // Login
     if (loginForm) {
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -21,21 +25,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const { data, error } = await supabase
                 .from('users')
-                .select()
+                .select("*")
                 .eq("email", email)
                 .eq("password", password)
                 .single();
 
             if (error || !data) {
-                console.log("email atau Password salah");
-                alert("email atau Password salah");
+                console.log("Email atau Password salah");
+                alert("Email atau Password salah");
             } else {
                 console.log('Login successful:', data);
+
+                console.log(data)
                 
-                // Gunakan localStorage untuk membuat loggin session terbaik sepanjang sejarah XD
+                // Gunakan localStorage untuk membuat login session
                 window.localStorage.setItem('loggedIn', true);
                 window.localStorage.setItem('id', data.id);
-                window.location.href = 'dashboard.html'; // Redirect to dashboard
+                window.localStorage.setItem('role', data.role); // Simpan peran pengguna
+
+                if (data.role === 'Admin') {
+                    window.location.href = 'admin/dashboard-admin.html'; // Redirect ke dashboard admin
+                } else {
+                    window.location.href = 'employee/dashboard.html'; // Redirect ke dashboard karyawan
+                }
             }
         });
     }
@@ -87,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Register user in the database
             const { data, error } = await supabase
                 .from('users')
-                .insert([{ id_user: newIdUser, email, role_name, password }]);
+                .insert([{ id_user: newIdUser, email, role: role_name, password }]);
 
             if (error) {
                 console.log("Registration failed:", error.message);
